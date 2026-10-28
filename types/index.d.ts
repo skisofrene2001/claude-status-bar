@@ -11,6 +11,13 @@ export type Etat = {
 
 declare module 'claude-code' {
   interface PluginState {
-    'barre-etat': { etat: Etat | null; now: number }
+    'barre-etat': {
+      etat: Etat | null
+      now: number
+      /** Style de barre choisi (identifiant de STYLES). */
+      style: string
+      /** Palette de couleurs choisie (identifiant de PALETTES). */
+      couleur: string
+    }
   }
 }

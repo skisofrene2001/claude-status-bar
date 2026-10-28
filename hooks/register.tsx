@@ -2,16 +2,14 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, SessionUsage } from 'claude-code'
 
 import type { Etat } from '../types'
+import { PALETTES, PALETTE_DEFAUT, STYLES, STYLE_DEFAUT, apercu, barre, choisir, seuil } from './barres'
 
 const etat = atom({ plugin: 'barre-etat', key: 'etat' } as const, null)
 // heure courante, remise à jour chaque minute : le compte à rebours se redessine
 const now = atom({ plugin: 'barre-etat', key: 'now' } as const, 0)
-
-// couleur d'un pourcentage : vert, puis orange à 50 %, rouge à 80 %
-const tone = (p: number) => (p >= 80 ? 'error' : p >= 50 ? 'warning' : 'success')
-
-// barre de progression : 10 segments en dégradé du vert au rouge selon leur place
-const SEGMENTS = ['#22C55E', '#4ADE80', '#A3E635', '#D9F99D', '#FACC15', '#FBBF24', '#F59E0B', '#F97316', '#EF4444', '#DC2626']
+// choix de l'utilisateur, gardé d'une session à l'autre ($.store)
+const style = atom({ plugin: 'barre-etat', key: 'style' } as const, STYLE_DEFAUT)
+const couleur = atom({ plugin: 'barre-etat', key: 'couleur' } as const, PALETTE_DEFAUT)
 
 const folderOf = (cwd: string) => cwd.split(/[\\/]/).filter(Boolean).pop() ?? cwd
 
@@ -50,12 +48,63 @@ async function refresh($: EngineInterface, usage?: Pick<SessionUsage, 'context' 
   await tick($)
 }
 
+// relit les choix enregistrés (store) dans l'état que lit le dessin
+async function loadChoices($: EngineInterface) {
+  const s = await $.store.get('style')
+  const c = await $.store.get('couleur')
+  await update($, style, () => (typeof s === 'string' && STYLES.some(x => x.id === s) ? s : STYLE_DEFAUT))
+  await update($, couleur, () => (typeof c === 'string' && PALETTES.some(x => x.id === c) ? c : PALETTE_DEFAUT))
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const r = await next(e)
+    await $.command.register({
+      name: 'barre-style',
+      description: 'Bandeau d\'état : choisir le style des barres de progression',
+      argumentHint: '[numéro ou nom]',
+      immediate: true,
+    })
+    await $.command.register({
+      name: 'barre-couleur',
+      description: 'Bandeau d\'état : choisir les couleurs des barres de progression',
+      argumentHint: '[numéro ou nom]',
+      immediate: true,
+    })
+    await loadChoices($)
     await refresh($)
     $.clock.every(60000, () => tick($))
     return r
+  })
+
+  on('command.run', { command: 'barre-style' }, async ($, e) => {
+    const actuel = await read($, style)
+    if (e.args.trim() === '') {
+      const lignes = STYLES.map((s, i) => `${i + 1}. ${apercu(s.id)}  ${s.nom}${s.id === actuel ? '  ← actuel' : ''}`)
+      return { text: `Styles de barre :\n${lignes.join('\n')}\n\nChoisir : /barre-style <numéro>` }
+    }
+    const choix = choisir(STYLES, e.args)
+    if (choix === undefined) {
+      return { text: `Style inconnu : « ${e.args.trim()} ». Tapez /barre-style pour la liste.` }
+    }
+    await $.store.set('style', choix.id)
+    await update($, style, () => choix.id)
+    return { text: `Style des barres : ${choix.nom} (${apercu(choix.id)})` }
+  })
+
+  on('command.run', { command: 'barre-couleur' }, async ($, e) => {
+    const actuel = await read($, couleur)
+    if (e.args.trim() === '') {
+      const lignes = PALETTES.map((c, i) => `${i + 1}. ${c.nom}${c.id === actuel ? '  ← actuelle' : ''}`)
+      return { text: `Couleurs des barres :\n${lignes.join('\n')}\n\nChoisir : /barre-couleur <numéro>` }
+    }
+    const choix = choisir(PALETTES, e.args)
+    if (choix === undefined) {
+      return { text: `Couleurs inconnues : « ${e.args.trim()} ». Tapez /barre-couleur pour la liste.` }
+    }
+    await $.store.set('couleur', choix.id)
+    await update($, couleur, () => choix.id)
+    return { text: `Couleurs des barres : ${choix.nom}` }
   })
 
   // le moteur mesure après chaque réponse : contexte, limites, coût
@@ -70,20 +119,21 @@ export const register: Register = on => {
       return next(e)
     }
     const t = await read($, now)
+    const styleId = await read($, style)
+    const paletteId = await read($, couleur)
     const { Box, Text } = $.ui.resolve(e)
     const sep = <Text dimColor> │ </Text>
     const pct = (label: string, p: number | undefined) => {
       if (p === undefined) {
         return null
       }
-      const filled = Math.min(SEGMENTS.length, Math.max(p > 0 ? 1 : 0, Math.round(p / 10)))
       return (
         <Text>
           <Text dimColor>{label} </Text>
-          {SEGMENTS.map((c, i) =>
-            i < filled ? <Text key={`f${i}`} color={c}>▰</Text> : <Text key={`e${i}`} dimColor>▱</Text>
+          {barre(styleId, paletteId, p).map((c, i) =>
+            c.dim ? <Text key={`c${i}`} dimColor>{c.ch}</Text> : <Text key={`c${i}`} color={c.color}>{c.ch}</Text>,
           )}
-          <Text color={tone(p)} bold> {Math.round(p)}%</Text>
+          <Text color={seuil(p)} bold> {Math.round(p)}%</Text>
         </Text>
       )
     }

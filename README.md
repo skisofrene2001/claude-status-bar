@@ -14,9 +14,31 @@ claude-opus-5-5 │ ctx ▰▰▰▰▱▱▱▱▱▱ 39% │ 5h ▰▰▰▰�
 - coût de la session ;
 - dossier de travail.
 
-Chaque pourcentage a sa barre de 10 segments, en dégradé du vert au rouge ; le nombre est en vert,
-orange à partir de 50 %, rouge à partir de 80 %. Le contexte et les
+Le nombre est en vert, orange à partir de 50 %, rouge à partir de 80 %. Le contexte et les
 quotas apparaissent après la première réponse de Claude.
+
+## Choisir le style et les couleurs
+
+Chaque utilisateur choisit l'apparence des barres ; le choix est gardé d'une session à l'autre.
+
+`/barre-style` liste les 10 styles, `/barre-style 3` (ou `/barre-style ligne`) en choisit un :
+
+| N° | Style | Aperçu |
+|---|---|---|
+| 1 | Segments (par défaut) | `▰▰▰▰▰▰▰▱▱▱` |
+| 2 | Blocs pleins | `███████░░░` |
+| 3 | Ligne fine | `━━━━━━━───` |
+| 4 | Points | `●●●●●●●○○○` |
+| 5 | Carrés | `■■■■■■■□□□` |
+| 6 | Précise au 1/8 | `███████▎░░` |
+| 7 | Escalier | `▁▂▃▄▅▆▇███` |
+| 8 | Losanges | `◆◆◆◆◆◆◆◇◇◇` |
+| 9 | Classique | `[======>   ]` |
+| 10 | Batterie | `▕███████   ▏` |
+
+`/barre-couleur` liste les 9 palettes, `/barre-couleur 3` (ou `/barre-couleur ocean`) en choisit une :
+1. Vert → rouge (par défaut), 2. Selon le seuil (vert, orange, rouge), 3. Océan, 4. Violet,
+5. Coucher de soleil, 6. Arc-en-ciel, 7. Menthe, 8. Feu, 9. Claude (orange uni).
 
 ## Installation
 
