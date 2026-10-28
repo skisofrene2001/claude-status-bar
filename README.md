@@ -15,6 +15,9 @@ terminal statusline. *[Version française plus bas.](#français)*
 The percentage is green, orange from 50 %, red from 80 %. Context and quotas show up after
 Claude's first answer.
 
+The bar always stays on a single line. When space runs short it tightens step by step: time
+left, model prefix, folder, shorter bars, cost, then percentages only.
+
 ## Install
 
 In a Claude Code session (Claude Desktop Code tab, or terminal), add the marketplace, then
@@ -52,7 +55,8 @@ Every style works with every palette.
 
 Bandeau d'état pour l'onglet Code de Claude Desktop, au-dessus de la zone de saisie : modèle,
 contexte, quota de 5 h (pourcentage, heure de remise à zéro, temps restant), quota de 7 jours,
-coût et dossier.
+coût et dossier. Toujours sur une seule ligne : quand la place manque, il se resserre par
+étapes (temps restant, préfixe du modèle, dossier, barres plus courtes, coût).
 
 Installation, dans une session Claude : ajouter la place de marché, puis installer le plugin.
 

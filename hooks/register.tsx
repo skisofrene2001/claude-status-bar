@@ -2,7 +2,8 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, SessionUsage } from 'claude-code'
 
 import type { Etat, Lang } from '../types'
-import { PALETTES, PALETTE_DEFAUT, STYLES, STYLE_DEFAUT, apercu, barre, choisir, seuil } from './barres'
+import { PALETTES, PALETTE_DEFAUT, STYLES, STYLE_DEFAUT, apercu, choisir } from './barres'
+import { ajuster } from './ligne'
 
 const etat = atom({ plugin: 'status-bar', key: 'etat' } as const, null)
 // heure courante, remise à jour chaque minute : le compte à rebours se redessine
@@ -162,42 +163,33 @@ export const register: Register = on => {
     const paletteId = await read($, couleur)
     const fr = (await read($, lang)) === 'fr'
     const { Box, Text } = $.ui.resolve(e)
-    const sep = <Text dimColor> │ </Text>
-    const pct = (label: string, p: number | undefined) => {
-      if (p === undefined) {
-        return null
-      }
-      return (
-        <Text>
-          <Text dimColor>{label} </Text>
-          {barre(styleId, paletteId, p).map((c, i) =>
-            c.dim ? <Text key={`c${i}`} dimColor>{c.ch}</Text> : <Text key={`c${i}`} color={c.color}>{c.ch}</Text>,
-          )}
-          <Text color={seuil(p)} bold> {Math.round(p)}%</Text>
-        </Text>
-      )
-    }
     // fin de la fenêtre de 5 h : heure de remise à zéro du quota et temps restant
     const hasReset = s.fiveHour !== undefined && s.fiveHourReset !== undefined && !Number.isNaN(s.fiveHourReset) && t > 0
+    const morceaux = ajuster(
+      {
+        ...s,
+        reset: hasReset
+          ? { heure: clockOf(s.fiveHourReset ?? 0), reste: durationOf((s.fiveHourReset ?? 0) - t) }
+          : undefined,
+        style: styleId,
+        palette: paletteId,
+        fr,
+      },
+      e.props.bodyColumns,
+    )
 
+    // une seule ligne, jamais de retour à la ligne : ajuster() a déjà fait tenir le contenu
     return (
-      <Box flexDirection="row" flexWrap="wrap">
-        <Text color="claude" bold>{s.model}</Text>
-        {s.ctx !== undefined && sep}
-        {pct('ctx', s.ctx)}
-        {s.fiveHour !== undefined && sep}
-        {pct('5h', s.fiveHour)}
-        {hasReset && (
-          <Text dimColor>
-            {' '}→ {clockOf(s.fiveHourReset ?? 0)} ({fr ? 'dans' : 'in'} {durationOf((s.fiveHourReset ?? 0) - t)})
-          </Text>
-        )}
-        {s.sevenDay !== undefined && sep}
-        {pct(fr ? '7j' : '7d', s.sevenDay)}
-        {s.usd !== undefined && sep}
-        {s.usd !== undefined && <Text>${s.usd.toFixed(2)}</Text>}
-        {sep}
-        <Text color="suggestion">{s.folder}</Text>
+      <Box flexDirection="row" flexWrap="nowrap">
+        <Text wrap="truncate-end">
+          {morceaux.map((m, i) =>
+            m.dim ? (
+              <Text key={`m${i}`} dimColor>{m.text}</Text>
+            ) : (
+              <Text key={`m${i}`} color={m.color} bold={m.bold}>{m.text}</Text>
+            ),
+          )}
+        </Text>
       </Box>
     )
   })
