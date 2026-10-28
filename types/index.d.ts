@@ -9,15 +9,19 @@ export type Etat = {
   usd?: number
 }
 
+/** Langue du bandeau et des réponses des commandes. */
+export type Lang = 'en' | 'fr'
+
 declare module 'claude-code' {
   interface PluginState {
-    'barre-etat': {
+    'status-bar': {
       etat: Etat | null
       now: number
       /** Style de barre choisi (identifiant de STYLES). */
       style: string
       /** Palette de couleurs choisie (identifiant de PALETTES). */
       couleur: string
+      lang: Lang
     }
   }
 }

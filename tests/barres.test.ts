@@ -44,4 +44,6 @@ test('choix par numéro, identifiant ou nom (accents ignorés)', () => {
   expect(choisir(STYLES, 'Carrés')?.id).toBe('carres')
   expect(choisir(PALETTES, 'ocean')?.id).toBe('ocean')
   expect(choisir(PALETTES, '11')).toBe(undefined)
+  expect(choisir(STYLES, '"thin line"')?.id).toBe('ligne')
+  expect(choisir(STYLES, 'squares')?.id).toBe('carres')
 })

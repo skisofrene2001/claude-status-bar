@@ -1,1 +1,1 @@
-{ "name": "barre-etat", "version": "0.3.0", "description": "Barre d'état au-dessus de la saisie : modèle, contexte, limites 5 h / 7 j, coût, dossier", "types": "./types/index.d.ts" }
+{ "name": "status-bar", "version": "1.0.0", "description": "Status bar for the Claude Desktop Code tab: model, context, 5h quota with reset time and countdown, 7-day quota, cost, folder, with 10 bar styles and 9 color palettes", "author": { "name": "skisofrene2001" }, "types": "./types/index.d.ts" }

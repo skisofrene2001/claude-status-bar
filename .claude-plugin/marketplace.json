@@ -1,5 +1,6 @@
 {
-  "name": "claude-barre-etat",
+  "name": "claude-status-bar",
+  "description": "Status bar for the Claude Desktop Code tab, with progress bars and quota reset countdown",
   "owner": { "name": "skisofrene2001" },
-  "plugins": [{ "name": "barre-etat", "source": "./" }]
+  "plugins": [{ "name": "status-bar", "source": "./" }]
 }

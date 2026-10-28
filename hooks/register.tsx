@@ -1,15 +1,20 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, SessionUsage } from 'claude-code'
 
-import type { Etat } from '../types'
+import type { Etat, Lang } from '../types'
 import { PALETTES, PALETTE_DEFAUT, STYLES, STYLE_DEFAUT, apercu, barre, choisir, seuil } from './barres'
 
-const etat = atom({ plugin: 'barre-etat', key: 'etat' } as const, null)
+const etat = atom({ plugin: 'status-bar', key: 'etat' } as const, null)
 // heure courante, remise à jour chaque minute : le compte à rebours se redessine
-const now = atom({ plugin: 'barre-etat', key: 'now' } as const, 0)
-// choix de l'utilisateur, gardé d'une session à l'autre ($.store)
-const style = atom({ plugin: 'barre-etat', key: 'style' } as const, STYLE_DEFAUT)
-const couleur = atom({ plugin: 'barre-etat', key: 'couleur' } as const, PALETTE_DEFAUT)
+const now = atom({ plugin: 'status-bar', key: 'now' } as const, 0)
+// choix de l'utilisateur, gardés d'une session à l'autre ($.store)
+const style = atom({ plugin: 'status-bar', key: 'style' } as const, STYLE_DEFAUT)
+const couleur = atom({ plugin: 'status-bar', key: 'couleur' } as const, PALETTE_DEFAUT)
+const lang = atom({ plugin: 'status-bar', key: 'lang' } as const, 'en')
+
+// commandes : anglais (/bar-style, /bar-color) et alias français (/barre-style, /barre-couleur)
+const STYLE_CMDS: Record<string, Lang> = { 'bar-style': 'en', 'barre-style': 'fr' }
+const COLOR_CMDS: Record<string, Lang> = { 'bar-color': 'en', 'barre-couleur': 'fr' }
 
 const folderOf = (cwd: string) => cwd.split(/[\\/]/).filter(Boolean).pop() ?? cwd
 
@@ -25,6 +30,15 @@ function clockOf(ms: number) {
 function durationOf(ms: number) {
   const minutes = Math.max(0, Math.ceil(ms / 60000))
   return minutes >= 60 ? `${Math.floor(minutes / 60)} h ${two(minutes % 60)}` : `${minutes} min`
+}
+
+// langue de l'ordinateur, tant que l'utilisateur n'a lancé aucune commande
+function systemLang(): Lang {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().locale.toLowerCase().startsWith('fr') ? 'fr' : 'en'
+  } catch {
+    return 'en'
+  }
 }
 
 async function tick($: EngineInterface) {
@@ -52,59 +66,84 @@ async function refresh($: EngineInterface, usage?: Pick<SessionUsage, 'context' 
 async function loadChoices($: EngineInterface) {
   const s = await $.store.get('style')
   const c = await $.store.get('couleur')
+  const l = await $.store.get('lang')
   await update($, style, () => (typeof s === 'string' && STYLES.some(x => x.id === s) ? s : STYLE_DEFAUT))
   await update($, couleur, () => (typeof c === 'string' && PALETTES.some(x => x.id === c) ? c : PALETTE_DEFAUT))
+  await update($, lang, () => (l === 'fr' || l === 'en' ? l : systemLang()))
+}
+
+// la langue de la commande devient celle du bandeau
+async function setLang($: EngineInterface, l: Lang) {
+  await $.store.set('lang', l)
+  await update($, lang, () => l)
 }
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const r = await next(e)
-    await $.command.register({
-      name: 'barre-style',
-      description: 'Bandeau d\'état : choisir le style des barres de progression',
-      argumentHint: '[numéro ou nom]',
-      immediate: true,
-    })
-    await $.command.register({
-      name: 'barre-couleur',
-      description: 'Bandeau d\'état : choisir les couleurs des barres de progression',
-      argumentHint: '[numéro ou nom]',
-      immediate: true,
-    })
+    const commands = [
+      { name: 'bar-style', description: 'Status bar: choose the progress bar style' },
+      { name: 'bar-color', description: 'Status bar: choose the progress bar colors' },
+      { name: 'barre-style', description: 'Bandeau d\'état : choisir le style des barres de progression' },
+      { name: 'barre-couleur', description: 'Bandeau d\'état : choisir les couleurs des barres de progression' },
+    ]
+    for (const c of commands) {
+      await $.command.register({ ...c, argumentHint: '[number | name]', immediate: true })
+    }
     await loadChoices($)
     await refresh($)
     $.clock.every(60000, () => tick($))
     return r
   })
 
-  on('command.run', { command: 'barre-style' }, async ($, e) => {
-    const actuel = await read($, style)
-    if (e.args.trim() === '') {
-      const lignes = STYLES.map((s, i) => `${i + 1}. ${apercu(s.id)}  ${s.nom}${s.id === actuel ? '  ← actuel' : ''}`)
-      return { text: `Styles de barre :\n${lignes.join('\n')}\n\nChoisir : /barre-style <numéro>` }
+  on('command.run', async ($, e, next) => {
+    const styleLang = STYLE_CMDS[e.command]
+    const colorLang = COLOR_CMDS[e.command]
+    if (styleLang !== undefined) {
+      const fr = styleLang === 'fr'
+      await setLang($, styleLang)
+      const actuel = await read($, style)
+      if (e.args.trim() === '') {
+        const lignes = STYLES.map(
+          (s, i) => `${i + 1}. ${apercu(s.id)}  ${fr ? s.nom : s.en}${s.id === actuel ? (fr ? '  ← actuel' : '  ← current') : ''}`,
+        )
+        return fr
+          ? { text: `Styles de barre :\n${lignes.join('\n')}\n\nChoisir : /barre-style <numéro>` }
+          : { text: `Bar styles:\n${lignes.join('\n')}\n\nChoose: /bar-style <number>` }
+      }
+      const choix = choisir(STYLES, e.args)
+      if (choix === undefined) {
+        return fr
+          ? { text: `Style inconnu : « ${e.args.trim()} ». Tapez /barre-style pour la liste.` }
+          : { text: `Unknown style: "${e.args.trim()}". Type /bar-style for the list.` }
+      }
+      await $.store.set('style', choix.id)
+      await update($, style, () => choix.id)
+      return { text: `${fr ? 'Style des barres' : 'Bar style'} : ${fr ? choix.nom : choix.en} (${apercu(choix.id)})` }
     }
-    const choix = choisir(STYLES, e.args)
-    if (choix === undefined) {
-      return { text: `Style inconnu : « ${e.args.trim()} ». Tapez /barre-style pour la liste.` }
+    if (colorLang !== undefined) {
+      const fr = colorLang === 'fr'
+      await setLang($, colorLang)
+      const actuel = await read($, couleur)
+      if (e.args.trim() === '') {
+        const lignes = PALETTES.map(
+          (c, i) => `${i + 1}. ${fr ? c.nom : c.en}${c.id === actuel ? (fr ? '  ← actuelle' : '  ← current') : ''}`,
+        )
+        return fr
+          ? { text: `Couleurs des barres :\n${lignes.join('\n')}\n\nChoisir : /barre-couleur <numéro>` }
+          : { text: `Bar colors:\n${lignes.join('\n')}\n\nChoose: /bar-color <number>` }
+      }
+      const choix = choisir(PALETTES, e.args)
+      if (choix === undefined) {
+        return fr
+          ? { text: `Couleurs inconnues : « ${e.args.trim()} ». Tapez /barre-couleur pour la liste.` }
+          : { text: `Unknown colors: "${e.args.trim()}". Type /bar-color for the list.` }
+      }
+      await $.store.set('couleur', choix.id)
+      await update($, couleur, () => choix.id)
+      return { text: `${fr ? 'Couleurs des barres' : 'Bar colors'} : ${fr ? choix.nom : choix.en}` }
     }
-    await $.store.set('style', choix.id)
-    await update($, style, () => choix.id)
-    return { text: `Style des barres : ${choix.nom} (${apercu(choix.id)})` }
-  })
-
-  on('command.run', { command: 'barre-couleur' }, async ($, e) => {
-    const actuel = await read($, couleur)
-    if (e.args.trim() === '') {
-      const lignes = PALETTES.map((c, i) => `${i + 1}. ${c.nom}${c.id === actuel ? '  ← actuelle' : ''}`)
-      return { text: `Couleurs des barres :\n${lignes.join('\n')}\n\nChoisir : /barre-couleur <numéro>` }
-    }
-    const choix = choisir(PALETTES, e.args)
-    if (choix === undefined) {
-      return { text: `Couleurs inconnues : « ${e.args.trim()} ». Tapez /barre-couleur pour la liste.` }
-    }
-    await $.store.set('couleur', choix.id)
-    await update($, couleur, () => choix.id)
-    return { text: `Couleurs des barres : ${choix.nom}` }
+    return next(e)
   })
 
   // le moteur mesure après chaque réponse : contexte, limites, coût
@@ -121,6 +160,7 @@ export const register: Register = on => {
     const t = await read($, now)
     const styleId = await read($, style)
     const paletteId = await read($, couleur)
+    const fr = (await read($, lang)) === 'fr'
     const { Box, Text } = $.ui.resolve(e)
     const sep = <Text dimColor> │ </Text>
     const pct = (label: string, p: number | undefined) => {
@@ -149,11 +189,11 @@ export const register: Register = on => {
         {pct('5h', s.fiveHour)}
         {hasReset && (
           <Text dimColor>
-            {' '}→ {clockOf(s.fiveHourReset ?? 0)} (dans {durationOf((s.fiveHourReset ?? 0) - t)})
+            {' '}→ {clockOf(s.fiveHourReset ?? 0)} ({fr ? 'dans' : 'in'} {durationOf((s.fiveHourReset ?? 0) - t)})
           </Text>
         )}
         {s.sevenDay !== undefined && sep}
-        {pct('7j', s.sevenDay)}
+        {pct(fr ? '7j' : '7d', s.sevenDay)}
         {s.usd !== undefined && sep}
         {s.usd !== undefined && <Text>${s.usd.toFixed(2)}</Text>}
         {sep}

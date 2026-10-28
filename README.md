@@ -1,52 +1,69 @@
-# barre-etat
+# Claude status bar
 
-Bandeau d'état pour l'onglet Code de Claude Desktop, affiché au-dessus de la zone de saisie,
-comme la statusline du terminal :
+A status bar for the **Code tab of Claude Desktop**, shown right above the prompt, like the
+terminal statusline. *[Version française plus bas.](#français)*
 
-```
-claude-opus-5-5 │ ctx ▰▰▰▰▱▱▱▱▱▱ 39% │ 5h ▰▰▰▰▱▱▱▱▱▱ 37% → 14:20 (dans 2 h 13) │ 7j ▰▰▰▰▰▱▱▱▱▱ 54% │ $13.49 │ ERP_Unifie
-```
+![Status bar combinations](docs/combinations.png)
 
-- modèle utilisé ;
-- remplissage du contexte ;
-- quota de 5 h : pourcentage, heure de remise à zéro et temps restant (mis à jour chaque minute) ;
-- quota de 7 jours ;
-- coût de la session ;
-- dossier de travail.
+- model in use;
+- context window fill;
+- 5-hour quota: percentage, reset time and time left (updated every minute);
+- 7-day quota;
+- session cost;
+- working folder.
 
-Le nombre est en vert, orange à partir de 50 %, rouge à partir de 80 %. Le contexte et les
-quotas apparaissent après la première réponse de Claude.
+The percentage is green, orange from 50 %, red from 80 %. Context and quotas show up after
+Claude's first answer.
 
-## Choisir le style et les couleurs
+## Install
 
-Chaque utilisateur choisit l'apparence des barres ; le choix est gardé d'une session à l'autre.
-
-`/barre-style` liste les 10 styles, `/barre-style 3` (ou `/barre-style ligne`) en choisit un :
-
-| N° | Style | Aperçu |
-|---|---|---|
-| 1 | Segments (par défaut) | `▰▰▰▰▰▰▰▱▱▱` |
-| 2 | Blocs pleins | `███████░░░` |
-| 3 | Ligne fine | `━━━━━━━───` |
-| 4 | Points | `●●●●●●●○○○` |
-| 5 | Carrés | `■■■■■■■□□□` |
-| 6 | Précise au 1/8 | `███████▎░░` |
-| 7 | Escalier | `▁▂▃▄▅▆▇███` |
-| 8 | Losanges | `◆◆◆◆◆◆◆◇◇◇` |
-| 9 | Classique | `[======>   ]` |
-| 10 | Batterie | `▕███████   ▏` |
-
-`/barre-couleur` liste les 9 palettes, `/barre-couleur 3` (ou `/barre-couleur ocean`) en choisit une :
-1. Vert → rouge (par défaut), 2. Selon le seuil (vert, orange, rouge), 3. Océan, 4. Violet,
-5. Coucher de soleil, 6. Arc-en-ciel, 7. Menthe, 8. Feu, 9. Claude (orange uni).
-
-## Installation
-
-Dans une session Claude Code (terminal, ou onglet Code de Claude Desktop), tapez :
+In a Claude Code session (Claude Desktop Code tab, or terminal), type:
 
 ```
-/plugin install barre-etat --marketplace skisofrene2001/claude-barre-etat
+/plugin install status-bar --marketplace skisofrene2001/claude-status-bar
 ```
 
-Répondez `y` pour ajouter la place de marché, puis choisissez la portée (utilisateur : toutes
-vos sessions).
+Answer `y` to add the marketplace, then pick the **user** scope so it is on in all your sessions.
+Update later with `/plugin update status-bar`.
+
+## Choose your style and colors
+
+Each person picks the look of the bars; the choice is kept from one session to the next.
+
+`/bar-style` lists the 10 styles, `/bar-style 3` (or `/bar-style "thin line"`) picks one:
+
+![Bar styles](docs/styles.png)
+
+`/bar-color` lists the 9 palettes, `/bar-color 3` (or `/bar-color ocean`) picks one:
+
+![Color palettes](docs/palettes.png)
+
+Every style works with every palette.
+
+## Français
+
+Bandeau d'état pour l'onglet Code de Claude Desktop, au-dessus de la zone de saisie : modèle,
+contexte, quota de 5 h (pourcentage, heure de remise à zéro, temps restant), quota de 7 jours,
+coût et dossier.
+
+Installation, dans une session Claude :
+
+```
+/plugin install status-bar --marketplace skisofrene2001/claude-status-bar
+```
+
+Les commandes existent aussi en français, et le bandeau suit alors la langue de la commande
+(« 7j », « dans 2 h 13 ») :
+
+- `/barre-style` : liste les 10 styles ; `/barre-style 3` en choisit un ;
+- `/barre-couleur` : liste les 9 palettes ; `/barre-couleur 3` en choisit une.
+
+Styles : Segments, Blocs pleins, Ligne fine, Points, Carrés, Précise au 1/8, Escalier,
+Losanges, Classique `[===>]`, Batterie.
+Palettes : Vert → rouge, Selon le seuil, Océan, Violet, Coucher de soleil, Arc-en-ciel,
+Menthe, Feu, Claude (orange uni).
+
+## Regenerating the images
+
+`npx -y tsx scripts/previews.ts` writes `docs/*.svg` from the real bar code; the README shows
+their PNG renders.
