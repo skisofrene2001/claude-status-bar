@@ -4,7 +4,11 @@
 import { barre, seuil } from './barres'
 import type { Case } from './barres'
 
-export type Morceau = { text: string; color?: string; dim?: boolean; bold?: boolean }
+// barre : case d'une barre de progression (dessinée plus grande selon la hauteur choisie)
+export type Morceau = { text: string; color?: string; dim?: boolean; bold?: boolean; barre?: boolean }
+
+/** Hauteur des barres : 1 normale, 2 grande, 3 très grande (dans l'app ; le terminal n'a qu'une taille). */
+export type Hauteur = 1 | 2 | 3
 
 export type Donnees = {
   model: string
@@ -18,6 +22,7 @@ export type Donnees = {
   style: string
   palette: string
   fr: boolean
+  hauteur: Hauteur
 }
 
 type Niveau = {
@@ -54,7 +59,7 @@ function pourcentage(d: Donnees, n: Niveau, label: string, p: number): Morceau[]
   const cases = n.barres ? (n.barreCourte ? courte(barre(d.style, d.palette, p)) : barre(d.style, d.palette, p)) : []
   return [
     { text: `${label} `, dim: true },
-    ...cases.map(c => (c.dim ? { text: c.ch, dim: true } : { text: c.ch, color: c.color })),
+    ...cases.map(c => (c.dim ? { text: c.ch, dim: true, barre: true } : { text: c.ch, color: c.color, barre: true })),
     { text: `${n.barres ? ' ' : ''}${Math.round(p)}%`, color: seuil(p), bold: true },
   ]
 }
@@ -81,12 +86,16 @@ export function ligne(d: Donnees, n: Niveau): Morceau[] {
 // larges qu'une lettre ; au terminal, une colonne chacun
 const LARGES = new Set([...'▰▱█░━─●○■□◆◇▁▂▃▄▅▆▇▏▎▍▌▋▊▉▕│→'])
 const LARGEUR_APP = 1.8
+// cases agrandies (hauteur 2 ou 3) : plus larges d'autant
+export const ECHELLE: Record<Hauteur, number> = { 1: 1, 2: 1.4, 3: 1.8 }
 // l'app : texte proportionnel, on garde une marge pour ne jamais passer à la ligne
 const MARGE_APP = 0.85
 
-export function largeur(morceaux: Morceau[], app = false): number {
+export function largeur(morceaux: Morceau[], app = false, hauteur: Hauteur = 1): number {
   let n = 0
-  for (const m of morceaux) for (const ch of m.text) n += app && LARGES.has(ch) ? LARGEUR_APP : 1
+  for (const m of morceaux)
+    for (const ch of m.text)
+      n += app && LARGES.has(ch) ? LARGEUR_APP * (m.barre ? ECHELLE[hauteur] : 1) : 1
   return n
 }
 
@@ -96,7 +105,7 @@ export function ajuster(d: Donnees, colonnes: number, app = false): Morceau[] {
   const place = app ? colonnes * MARGE_APP : colonnes
   for (const n of NIVEAUX) {
     const l = ligne(d, n)
-    if (largeur(l, app) <= place) return l
+    if (largeur(l, app, d.hauteur) <= place) return l
   }
   return ligne(d, NIVEAUX[NIVEAUX.length - 1]!)
 }

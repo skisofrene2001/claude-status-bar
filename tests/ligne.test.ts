@@ -14,6 +14,7 @@ const D: Donnees = {
   style: 'segments',
   palette: 'degrade',
   fr: true,
+  hauteur: 1,
 }
 
 const texte = (cols: number) => ajuster(D, cols).map(m => m.text).join('')
@@ -56,4 +57,11 @@ test("dans l'app, les cases comptent plus large : la ligne se resserre plus tôt
   expect(ajuster(D, cols).map(m => m.text).join('')).toContain('(dans 2 h 13)')
   expect(ajuster(D, cols, true).map(m => m.text).join('')).not.toContain('(dans 2 h 13)')
   expect(largeur(ajuster(D, 120, true), true) <= 120 * 0.85).toBe(true)
+})
+
+test('barres plus hautes : plus larges, la ligne se resserre plus tôt', () => {
+  const d3 = { ...D, hauteur: 3 as const }
+  expect(largeur(ligne(d3, NIVEAUX[0]!), true, 3) > largeur(ligne(D, NIVEAUX[0]!), true, 1)).toBe(true)
+  expect(largeur(ajuster(d3, 150, true), true, 3) <= 150 * 0.85).toBe(true)
+  expect(ajuster(d3, 150, true).some(m => m.barre)).toBe(true)
 })

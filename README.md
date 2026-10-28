@@ -51,6 +51,9 @@ Each person picks the look of the bars; the choice is kept from one session to t
 
 Every style works with every palette.
 
+`/bar-height 1`, `2` or `3` sets the bar height in Claude Desktop (normal, large, extra large; the
+terminal has a single text size). Default: 3.
+
 ## Français
 
 Bandeau d'état pour l'onglet Code de Claude Desktop, au-dessus de la zone de saisie : modèle,
@@ -76,6 +79,7 @@ Les commandes existent aussi en français, et le bandeau suit alors la langue de
 
 - `/barre-style` : liste les 10 styles ; `/barre-style 3` en choisit un ;
 - `/barre-couleur` : liste les 9 palettes ; `/barre-couleur 3` en choisit une.
+- `/barre-hauteur 1`, `2` ou `3` : hauteur des barres dans Claude Desktop (3 par défaut).
 
 Styles : Segments, Blocs pleins, Ligne fine, Points, Carrés, Précise au 1/8, Escalier,
 Losanges, Classique `[===>]`, Batterie.
