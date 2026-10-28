@@ -1,1 +1,1 @@
-{ "name": "barre-etat", "version": "0.1.0", "description": "Barre d'état au-dessus de la saisie : modèle, contexte, limites 5 h / 7 j, coût, dossier", "types": "./types/index.d.ts" }
+{ "name": "barre-etat", "version": "0.2.0", "description": "Barre d'état au-dessus de la saisie : modèle, contexte, limites 5 h / 7 j, coût, dossier", "types": "./types/index.d.ts" }

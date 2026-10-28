@@ -10,6 +10,9 @@ const now = atom({ plugin: 'barre-etat', key: 'now' } as const, 0)
 // couleur d'un pourcentage : vert, puis orange à 50 %, rouge à 80 %
 const tone = (p: number) => (p >= 80 ? 'error' : p >= 50 ? 'warning' : 'success')
 
+// barre de progression : 10 segments en dégradé du vert au rouge selon leur place
+const SEGMENTS = ['#22C55E', '#4ADE80', '#A3E635', '#D9F99D', '#FACC15', '#FBBF24', '#F59E0B', '#F97316', '#EF4444', '#DC2626']
+
 const folderOf = (cwd: string) => cwd.split(/[\\/]/).filter(Boolean).pop() ?? cwd
 
 const two = (n: number) => String(n).padStart(2, '0')
@@ -69,13 +72,21 @@ export const register: Register = on => {
     const t = await read($, now)
     const { Box, Text } = $.ui.resolve(e)
     const sep = <Text dimColor> │ </Text>
-    const pct = (label: string, p: number | undefined) =>
-      p === undefined ? null : (
+    const pct = (label: string, p: number | undefined) => {
+      if (p === undefined) {
+        return null
+      }
+      const filled = Math.min(SEGMENTS.length, Math.max(p > 0 ? 1 : 0, Math.round(p / 10)))
+      return (
         <Text>
           <Text dimColor>{label} </Text>
-          <Text color={tone(p)}>{Math.round(p)}%</Text>
+          {SEGMENTS.map((c, i) =>
+            i < filled ? <Text key={`f${i}`} color={c}>▰</Text> : <Text key={`e${i}`} dimColor>▱</Text>
+          )}
+          <Text color={tone(p)} bold> {Math.round(p)}%</Text>
         </Text>
       )
+    }
     // fin de la fenêtre de 5 h : heure de remise à zéro du quota et temps restant
     const hasReset = s.fiveHour !== undefined && s.fiveHourReset !== undefined && !Number.isNaN(s.fiveHourReset) && t > 0
 

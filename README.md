@@ -4,7 +4,7 @@ Bandeau d'état pour l'onglet Code de Claude Desktop, affiché au-dessus de la z
 comme la statusline du terminal :
 
 ```
-claude-opus-5-5 │ ctx 39% │ 5h 37% → 14:20 (dans 2 h 13) │ 7j 54% │ $13.49 │ ERP_Unifie
+claude-opus-5-5 │ ctx ▰▰▰▰▱▱▱▱▱▱ 39% │ 5h ▰▰▰▰▱▱▱▱▱▱ 37% → 14:20 (dans 2 h 13) │ 7j ▰▰▰▰▰▱▱▱▱▱ 54% │ $13.49 │ ERP_Unifie
 ```
 
 - modèle utilisé ;
@@ -14,7 +14,8 @@ claude-opus-5-5 │ ctx 39% │ 5h 37% → 14:20 (dans 2 h 13) │ 7j 54% │ $1
 - coût de la session ;
 - dossier de travail.
 
-Pourcentages en vert, orange à partir de 50 %, rouge à partir de 80 %. Le contexte et les
+Chaque pourcentage a sa barre de 10 segments, en dégradé du vert au rouge ; le nombre est en vert,
+orange à partir de 50 %, rouge à partir de 80 %. Le contexte et les
 quotas apparaissent après la première réponse de Claude.
 
 ## Installation
