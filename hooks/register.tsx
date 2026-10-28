@@ -223,18 +223,19 @@ export const register: Register = on => {
     // cases des barres agrandies dans l'app ; le reste du texte garde sa taille
     const taille = app ? TAILLES[haut] : undefined
 
-    // une seule ligne, jamais de retour à la ligne : ajuster() a déjà fait tenir le contenu
+    // une seule ligne : chaque morceau garde sa largeur (flexShrink 0), ce qui dépasse à droite
+    // est masqué ; ajuster() a déjà choisi la version qui tient à peu près
     return (
-      <Box flexDirection="row" flexWrap="nowrap" alignItems="center">
-        <Text wrap="truncate-end">
-          {morceaux.map((m, i) =>
-            m.dim ? (
-              <Text key={`m${i}`} dimColor size={m.barre ? taille : undefined}>{m.text}</Text>
+      <Box flexDirection="row" flexWrap="nowrap" alignItems="center" overflow="hidden">
+        {morceaux.map((m, i) => (
+          <Box key={`m${i}`} flexShrink={0}>
+            {m.dim ? (
+              <Text dimColor wrap="truncate-end" size={m.barre ? taille : undefined}>{m.text}</Text>
             ) : (
-              <Text key={`m${i}`} color={m.color} bold={m.bold} size={m.barre ? taille : undefined}>{m.text}</Text>
-            ),
-          )}
-        </Text>
+              <Text color={m.color} bold={m.bold} wrap="truncate-end" size={m.barre ? taille : undefined}>{m.text}</Text>
+            )}
+          </Box>
+        ))}
       </Box>
     )
   })

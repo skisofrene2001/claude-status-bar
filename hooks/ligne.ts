@@ -85,11 +85,11 @@ export function ligne(d: Donnees, n: Niveau): Morceau[] {
 // glyphes des barres et séparateurs : dans l'app (police proportionnelle) ils sont bien plus
 // larges qu'une lettre ; au terminal, une colonne chacun
 const LARGES = new Set([...'▰▱█░━─●○■□◆◇▁▂▃▄▅▆▇▏▎▍▌▋▊▉▕│→'])
-const LARGEUR_APP = 1.8
+const LARGEUR_APP = 1.3
 // cases agrandies (hauteur 2 ou 3) : plus larges d'autant
-export const ECHELLE: Record<Hauteur, number> = { 1: 1, 2: 1.4, 3: 1.8 }
-// l'app : texte proportionnel, on garde une marge pour ne jamais passer à la ligne
-const MARGE_APP = 0.85
+export const ECHELLE: Record<Hauteur, number> = { 1: 1, 2: 1.3, 3: 1.6 }
+// l'app : estimation seulement (police proportionnelle) ; le dessin masque ce qui dépasserait
+export const MARGE_APP = 1
 
 export function largeur(morceaux: Morceau[], app = false, hauteur: Hauteur = 1): number {
   let n = 0

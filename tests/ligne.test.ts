@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { NIVEAUX, ajuster, largeur, ligne } from '../hooks/ligne'
+import { MARGE_APP, NIVEAUX, ajuster, largeur, ligne } from '../hooks/ligne'
 import type { Donnees } from '../hooks/ligne'
 
 const D: Donnees = {
@@ -56,12 +56,12 @@ test("dans l'app, les cases comptent plus large : la ligne se resserre plus tôt
   const cols = largeur(ligne(D, NIVEAUX[0]!))
   expect(ajuster(D, cols).map(m => m.text).join('')).toContain('(dans 2 h 13)')
   expect(ajuster(D, cols, true).map(m => m.text).join('')).not.toContain('(dans 2 h 13)')
-  expect(largeur(ajuster(D, 120, true), true) <= 120 * 0.85).toBe(true)
+  expect(largeur(ajuster(D, 120, true), true) <= 120 * MARGE_APP).toBe(true)
 })
 
 test('barres plus hautes : plus larges, la ligne se resserre plus tôt', () => {
   const d3 = { ...D, hauteur: 3 as const }
   expect(largeur(ligne(d3, NIVEAUX[0]!), true, 3) > largeur(ligne(D, NIVEAUX[0]!), true, 1)).toBe(true)
-  expect(largeur(ajuster(d3, 150, true), true, 3) <= 150 * 0.85).toBe(true)
+  expect(largeur(ajuster(d3, 150, true), true, 3) <= 150 * MARGE_APP).toBe(true)
   expect(ajuster(d3, 150, true).some(m => m.barre)).toBe(true)
 })
