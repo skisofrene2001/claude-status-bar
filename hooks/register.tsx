@@ -80,11 +80,11 @@ async function loadChoices($: EngineInterface) {
   const s = await $.store.get('style')
   const c = await $.store.get('couleur')
   const l = await $.store.get('lang')
-  const h = await $.store.get('hauteur')
+  const hs = await $.store.get('hauteur')
   await update($, style, () => (typeof s === 'string' && STYLES.some(x => x.id === s) ? s : STYLE_DEFAUT))
   await update($, couleur, () => (typeof c === 'string' && PALETTES.some(x => x.id === c) ? c : PALETTE_DEFAUT))
   await update($, lang, () => (l === 'fr' || l === 'en' ? l : systemLang()))
-  await update($, hauteur, () => (h === 1 || h === 2 || h === 3 ? h : HAUTEUR_DEFAUT))
+  await update($, hauteur, () => (hs === 1 || hs === 2 || hs === 3 ? hs : HAUTEUR_DEFAUT))
 }
 
 // la langue de la commande devient celle du bandeau
@@ -200,7 +200,8 @@ export const register: Register = on => {
     const styleId = await read($, style)
     const paletteId = await read($, couleur)
     const fr = (await read($, lang)) === 'fr'
-    const h = await read($, hauteur)
+    // pas « h » : c'est la fonction de dessin du JSX
+    const haut = await read($, hauteur)
     const app = e.surface !== 'terminal'
     const { Box, Text } = $.ui.resolve(e)
     // fin de la fenêtre de 5 h : heure de remise à zéro du quota et temps restant
@@ -214,13 +215,13 @@ export const register: Register = on => {
         style: styleId,
         palette: paletteId,
         fr,
-        hauteur: h,
+        hauteur: haut,
       },
       e.props.bodyColumns,
       app,
     )
     // cases des barres agrandies dans l'app ; le reste du texte garde sa taille
-    const taille = app ? TAILLES[h] : undefined
+    const taille = app ? TAILLES[haut] : undefined
 
     // une seule ligne, jamais de retour à la ligne : ajuster() a déjà fait tenir le contenu
     return (
