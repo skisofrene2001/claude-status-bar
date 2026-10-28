@@ -17,14 +17,22 @@ Claude's first answer.
 
 ## Install
 
-In a Claude Code session (Claude Desktop Code tab, or terminal), type:
+In a Claude Code session (Claude Desktop Code tab, or terminal), add the marketplace, then
+install the plugin:
 
 ```
-/plugin install status-bar --marketplace skisofrene2001/claude-status-bar
+/plugin marketplace add skisofrene2001/claude-status-bar
 ```
 
-Answer `y` to add the marketplace, then pick the **user** scope so it is on in all your sessions.
-Update later with `/plugin update status-bar`.
+```
+/plugin install status-bar@claude-status-bar
+```
+
+Pick the **user** scope so it is on in all your sessions. Update later with
+`/plugin update status-bar`.
+
+In Claude Desktop you can also click **+** in the plugin directory, enter
+`skisofrene2001/claude-status-bar`, then install **status-bar** from the list.
 
 ## Choose your style and colors
 
@@ -46,11 +54,18 @@ Bandeau d'état pour l'onglet Code de Claude Desktop, au-dessus de la zone de sa
 contexte, quota de 5 h (pourcentage, heure de remise à zéro, temps restant), quota de 7 jours,
 coût et dossier.
 
-Installation, dans une session Claude :
+Installation, dans une session Claude : ajouter la place de marché, puis installer le plugin.
 
 ```
-/plugin install status-bar --marketplace skisofrene2001/claude-status-bar
+/plugin marketplace add skisofrene2001/claude-status-bar
 ```
+
+```
+/plugin install status-bar@claude-status-bar
+```
+
+Dans Claude Desktop, on peut aussi cliquer sur **+** dans le répertoire des plugins, entrer
+`skisofrene2001/claude-status-bar`, puis installer **status-bar** dans la liste.
 
 Les commandes existent aussi en français, et le bandeau suit alors la langue de la commande
 (« 7j », « dans 2 h 13 ») :
