@@ -1,0 +1,5 @@
+{
+  "name": "claude-barre-etat",
+  "owner": { "name": "skisofrene2001" },
+  "plugins": [{ "name": "barre-etat", "source": "./" }]
+}
