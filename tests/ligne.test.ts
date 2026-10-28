@@ -50,3 +50,10 @@ test('le temps restant part en premier, puis le préfixe du modèle, puis le dos
 test('très étroit : pourcentages seuls, sans barres', () => {
   expect(texte(10)).toBe('opus-5-5 │ ctx 39% │ 5h 37% → 14:20 │ 7j 54%')
 })
+
+test("dans l'app, les cases comptent plus large : la ligne se resserre plus tôt", () => {
+  const cols = largeur(ligne(D, NIVEAUX[0]!))
+  expect(ajuster(D, cols).map(m => m.text).join('')).toContain('(dans 2 h 13)')
+  expect(ajuster(D, cols, true).map(m => m.text).join('')).not.toContain('(dans 2 h 13)')
+  expect(largeur(ajuster(D, 120, true), true) <= 120 * 0.85).toBe(true)
+})

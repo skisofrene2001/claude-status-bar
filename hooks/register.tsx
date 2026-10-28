@@ -176,6 +176,7 @@ export const register: Register = on => {
         fr,
       },
       e.props.bodyColumns,
+      e.surface !== 'terminal',
     )
 
     // une seule ligne, jamais de retour à la ligne : ajuster() a déjà fait tenir le contenu

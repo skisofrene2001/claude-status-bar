@@ -77,13 +77,26 @@ export function ligne(d: Donnees, n: Niveau): Morceau[] {
   return out
 }
 
-export const largeur = (morceaux: Morceau[]) => morceaux.reduce((n, m) => n + [...m.text].length, 0)
+// glyphes des barres et séparateurs : dans l'app (police proportionnelle) ils sont bien plus
+// larges qu'une lettre ; au terminal, une colonne chacun
+const LARGES = new Set([...'▰▱█░━─●○■□◆◇▁▂▃▄▅▆▇▏▎▍▌▋▊▉▕│→'])
+const LARGEUR_APP = 1.8
+// l'app : texte proportionnel, on garde une marge pour ne jamais passer à la ligne
+const MARGE_APP = 0.85
 
-// la version la plus complète qui tient dans la largeur ; la plus serrée sinon
-export function ajuster(d: Donnees, colonnes: number): Morceau[] {
+export function largeur(morceaux: Morceau[], app = false): number {
+  let n = 0
+  for (const m of morceaux) for (const ch of m.text) n += app && LARGES.has(ch) ? LARGEUR_APP : 1
+  return n
+}
+
+// la version la plus complète qui tient dans la largeur ; la plus serrée sinon.
+// app : dessiné par Claude Desktop (police proportionnelle) plutôt que par un terminal
+export function ajuster(d: Donnees, colonnes: number, app = false): Morceau[] {
+  const place = app ? colonnes * MARGE_APP : colonnes
   for (const n of NIVEAUX) {
     const l = ligne(d, n)
-    if (largeur(l) <= colonnes) return l
+    if (largeur(l, app) <= place) return l
   }
   return ligne(d, NIVEAUX[NIVEAUX.length - 1]!)
 }
