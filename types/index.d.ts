@@ -22,8 +22,8 @@ declare module 'claude-code' {
       /** Palette de couleurs choisie (identifiant de PALETTES). */
       couleur: string
       lang: Lang
-      /** Hauteur des barres : 1, 2 ou 3. */
-      hauteur: 1 | 2 | 3
+      /** Hauteur des barres : 1 à 5. */
+      hauteur: 1 | 2 | 3 | 4 | 5
     }
   }
 }

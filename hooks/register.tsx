@@ -21,12 +21,16 @@ const STYLE_CMDS: Record<string, Lang> = { 'bar-style': 'en', 'barre-style': 'fr
 const COLOR_CMDS: Record<string, Lang> = { 'bar-color': 'en', 'barre-couleur': 'fr' }
 const HEIGHT_CMDS: Record<string, Lang> = { 'bar-height': 'en', 'barre-hauteur': 'fr' }
 
-// taille du texte des cases dans l'app, par hauteur choisie
-const TAILLES = { 1: 'body', 2: 'heading', 3: 'title' } as const
+// taille du texte des cases dans l'app, par hauteur choisie ; 4 et 5 : rectangles
+const TAILLES = { 1: 'body', 2: 'heading', 3: 'title', 4: undefined, 5: undefined } as const
+// couleur d'une case vide dessinée en rectangle
+const VIDE = 'inactive'
 const HAUTEURS: { h: Hauteur; fr: string; en: string }[] = [
   { h: 1, fr: 'normale', en: 'normal' },
   { h: 2, fr: 'grande', en: 'large' },
   { h: 3, fr: 'très grande', en: 'extra large' },
+  { h: 4, fr: 'rectangles pleins (1 ligne)', en: 'solid blocks (1 row)' },
+  { h: 5, fr: 'rectangles pleins (2 lignes)', en: 'solid blocks (2 rows)' },
 ]
 
 const folderOf = (cwd: string) => cwd.split(/[\\/]/).filter(Boolean).pop() ?? cwd
@@ -84,7 +88,7 @@ async function loadChoices($: EngineInterface) {
   await update($, style, () => (typeof s === 'string' && STYLES.some(x => x.id === s) ? s : STYLE_DEFAUT))
   await update($, couleur, () => (typeof c === 'string' && PALETTES.some(x => x.id === c) ? c : PALETTE_DEFAUT))
   await update($, lang, () => (l === 'fr' || l === 'en' ? l : systemLang()))
-  await update($, hauteur, () => (hs === 1 || hs === 2 || hs === 3 ? hs : HAUTEUR_DEFAUT))
+  await update($, hauteur, () => (hs === 1 || hs === 2 || hs === 3 || hs === 4 || hs === 5 ? hs : HAUTEUR_DEFAUT))
 }
 
 // la langue de la commande devient celle du bandeau
@@ -101,8 +105,8 @@ export const register: Register = on => {
       { name: 'bar-color', description: 'Status bar: choose the progress bar colors' },
       { name: 'barre-style', description: 'Bandeau d\'état : choisir le style des barres de progression' },
       { name: 'barre-couleur', description: 'Bandeau d\'état : choisir les couleurs des barres de progression' },
-      { name: 'bar-height', description: 'Status bar: choose the progress bar height (1, 2 or 3)' },
-      { name: 'barre-hauteur', description: 'Bandeau d\'état : choisir la hauteur des barres (1, 2 ou 3)' },
+      { name: 'bar-height', description: 'Status bar: choose the progress bar height (1 to 5)' },
+      { name: 'barre-hauteur', description: 'Bandeau d\'état : choisir la hauteur des barres (1 à 5)' },
     ]
     for (const c of commands) {
       await $.command.register({ ...c, argumentHint: '[number | name]', immediate: true })
@@ -169,13 +173,13 @@ export const register: Register = on => {
       if (e.args.trim() === '') {
         const lignes = HAUTEURS.map(x => `${x.h}. ${fr ? x.fr : x.en}${x.h === actuel ? (fr ? '  ← actuelle' : '  ← current') : ''}`)
         return fr
-          ? { text: `Hauteur des barres :\n${lignes.join('\n')}\n\nChoisir : /barre-hauteur <1, 2 ou 3>` }
-          : { text: `Bar height:\n${lignes.join('\n')}\n\nChoose: /bar-height <1, 2 or 3>` }
+          ? { text: `Hauteur des barres :\n${lignes.join('\n')}\n\nChoisir : /barre-hauteur <1 à 5>` }
+          : { text: `Bar height:\n${lignes.join('\n')}\n\nChoose: /bar-height <1 to 5>` }
       }
-      if (n !== 1 && n !== 2 && n !== 3) {
+      if (n !== 1 && n !== 2 && n !== 3 && n !== 4 && n !== 5) {
         return fr
-          ? { text: `Hauteur inconnue : « ${e.args.trim()} ». Choisissez 1, 2 ou 3.` }
-          : { text: `Unknown height: "${e.args.trim()}". Choose 1, 2 or 3.` }
+          ? { text: `Hauteur inconnue : « ${e.args.trim()} ». Choisissez de 1 à 5.` }
+          : { text: `Unknown height: "${e.args.trim()}". Choose 1 to 5.` }
       }
       await $.store.set('hauteur', n)
       await update($, hauteur, () => n)
@@ -222,12 +226,23 @@ export const register: Register = on => {
     )
     // cases des barres agrandies dans l'app ; le reste du texte garde sa taille
     const taille = app ? TAILLES[haut] : undefined
+    // hauteurs 4 et 5 dans l'app : chaque case est un rectangle plein d'une ou deux lignes
+    const rectangles = app && haut >= 4 ? haut - 3 : 0
 
     // une seule ligne : chaque morceau garde sa largeur (flexShrink 0), ce qui dépasse à droite
     // est masqué ; ajuster() a déjà choisi la version qui tient à peu près
     return (
       <Box flexDirection="row" flexWrap="nowrap" alignItems="center" overflow="hidden">
-        {morceaux.map((m, i) => (
+        {morceaux.map((m, i) =>
+          rectangles > 0 && m.barre ? (
+            <Box
+              key={`m${i}`}
+              flexShrink={0}
+              width={[...m.text].length}
+              height={rectangles}
+              backgroundColor={m.dim ? VIDE : m.color}
+            />
+          ) : (
           <Box key={`m${i}`} flexShrink={0}>
             {m.dim ? (
               <Text dimColor wrap="truncate-end" size={m.barre ? taille : undefined}>{m.text}</Text>
@@ -235,7 +250,8 @@ export const register: Register = on => {
               <Text color={m.color} bold={m.bold} wrap="truncate-end" size={m.barre ? taille : undefined}>{m.text}</Text>
             )}
           </Box>
-        ))}
+          ),
+        )}
       </Box>
     )
   })

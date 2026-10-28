@@ -7,8 +7,9 @@ import type { Case } from './barres'
 // barre : case d'une barre de progression (dessinée plus grande selon la hauteur choisie)
 export type Morceau = { text: string; color?: string; dim?: boolean; bold?: boolean; barre?: boolean }
 
-/** Hauteur des barres : 1 normale, 2 grande, 3 très grande (dans l'app ; le terminal n'a qu'une taille). */
-export type Hauteur = 1 | 2 | 3
+/** Hauteur des barres dans l'app (le terminal n'a qu'une taille) : 1 à 3, caractères plus ou moins
+    grands ; 4 et 5, cases dessinées en rectangles pleins d'une ou deux lignes de haut. */
+export type Hauteur = 1 | 2 | 3 | 4 | 5
 
 export type Donnees = {
   model: string
@@ -87,7 +88,7 @@ export function ligne(d: Donnees, n: Niveau): Morceau[] {
 const LARGES = new Set([...'▰▱█░━─●○■□◆◇▁▂▃▄▅▆▇▏▎▍▌▋▊▉▕│→'])
 const LARGEUR_APP = 1.3
 // cases agrandies (hauteur 2 ou 3) : plus larges d'autant
-export const ECHELLE: Record<Hauteur, number> = { 1: 1, 2: 1.3, 3: 1.6 }
+export const ECHELLE: Record<Hauteur, number> = { 1: 1, 2: 1.3, 3: 1.6, 4: 1, 5: 1 }
 // l'app : estimation seulement (police proportionnelle) ; le dessin masque ce qui dépasserait
 export const MARGE_APP = 1
 

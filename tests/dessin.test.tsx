@@ -44,3 +44,17 @@ test('le bandeau se dessine, dans l\'app comme au terminal', async ($, on) => {
     await ui.unmount()
   }
 })
+
+test('hauteur 5 dans l\'app : cases en rectangles de 2 lignes', async ($, on) => {
+  const etat: Record<string, unknown> = { ...ETAT, hauteur: 5 }
+  on('state.get', (_, e) => ({ value: { value: etat[e.key], version: 1 } }))
+
+  const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  const boites = await ui.findAll({ type: 'Box' })
+  // 3 barres de 10 cases, chacune un rectangle de 2 lignes de haut
+  expect(boites.filter(b => b.props.height === 2).length).toBe(30)
+  const tout = (await ui.findAll({ type: 'Text' })).map(t => t.text ?? '').join('')
+  expect(tout).not.toContain('●')
+  expect(tout).toContain('39%')
+  await ui.unmount()
+})
